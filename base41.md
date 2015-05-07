@@ -235,8 +235,8 @@ Obviously, it is not by accident. We want to escape quotes, but
 also `#`, `$` and `%` which are often used for interpolation in
 strings in various programming languages.
 
-Actually, the first ASCII char that is string safe would be 40
-- `(`. But, using 41 matches the "base", so we choose that instead.
+Actually, the first ASCII char that is string safe would be value 40,
+char `(`. But, using 41 matches the "base", so we choose that instead.
 
 It is true that ASCII 41 is `)`, so maybe it would be nice to omit it,
 since we already omitted `(`. OTOH, since we only use the closing

@@ -29,8 +29,8 @@ static void torture_test(void)
 	  char s[(sizeof data / 2) * 3 + 1];
 	  uint8_t dec[sizeof data];
 	  data[3] = l;
-	  base41_encode_32(data, sizeof data, s);
-	  base41_decode(s, dec);
+	  base41_encode_opt32(data, sizeof data, s);
+	  base41_decode(s, strlen(s), dec);
 	  assert(0 == memcmp(data, dec, sizeof data));
 	}
       }
@@ -46,9 +46,9 @@ int main()
 #define STR "BABA.DEDA.DECA."
 
   uint8_t dec_data[sizeof data];
-  char enc_str[sizeof STR + 1];
+  char enc_str[sizeof STR];
 
-  base41_decode(STR, dec_data);
+  base41_decode(STR, sizeof STR - 1, dec_data);
   printf("'%s' = Base41(", STR);
   print_array(dec_data, sizeof dec_data);
   printf(")\n");
@@ -61,7 +61,7 @@ int main()
   assert(strcmp(STR, enc_str) == 0);
   assert(memcmp(data, dec_data, sizeof data) == 0);
 
-  base41_encode_32(data, sizeof data, enc_str);
+  base41_encode_opt32(data, sizeof data, enc_str);
   printf("Base41_optimised32(");
   print_array(data, sizeof data);
   printf(") = '%s'\n", enc_str);

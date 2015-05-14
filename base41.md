@@ -156,6 +156,21 @@ That aligns nicely, but, maybe this view is easier to comprehend:
 	G H I J K L M N O P
 	Q
 
+For those who love tables:
+
+	value symbol     value symbol     value symbol     value symbol
+	 0    )          10    3          20    =           30    G
+	 1    *          11    4          21    >           31    H
+	 2    +          12    5          22    ?           32    I
+	 3    ,          13    6          23    @           33    J
+	 4    -          14    7          24    A           34    K
+	 5    .          15    8          25    B           35    L
+	 6    /          16    9          26    C           36    M
+	 7    0          17    :          27    D           37    N
+	 8    1          18    ;          28    E           38    O
+	 9    2          19    <          29    F           39    P
+	40    Q
+
 
 ## Discussion
 
@@ -208,10 +223,9 @@ Base64 is rather weird:
   and fail if it is not
 - It needs tables for encoding and decoding
 - Pretty much no data is multiple of 3 in length, except by accident,
-  so most of the time you'll have on or two padding chars at the end.
+  so most of the time you'll have one or two padding chars at the end.
   For short data length this may be important.
-- Code is weird, with those 3 byte chunks...
-- With 3 byte chunks and padding, code is actually a little tricky
+- Code is weird and complex and tricky, with those 3 byte chunks...
 - Since it's tricky, code also isn't very small or fast
 
 ### This encoding requires division by 41, isn't that slow?
@@ -247,8 +261,8 @@ about it is that division by 48 can be done as by division 16 (a shift
 by 4 bit-wise), followed by division by three, which is a special form
 of division that can be done more efficiently than division by 41,
 which is a large prime number. So, on slow processors, especially
-those that don't have a HW multiplier, this would likely be faster
-than division by 41.
+those that don't have a HW divider, this would likely be faster than
+division by 41.
 
 But:
 
@@ -336,12 +350,13 @@ and the encoding loop:
 So, actually, it's more efficient than "naive" division by 48 and as
 efficient as "smart" division by 48.
 
-BTW, 1/41 is 0x063e70..., so, it has a nice property of us being able
-to use the first five hex digits (20 bits), but actually get the
-precision of six hex digits! This is much better than 1/40 and a
-little better than 1/42. Also, it's pure chance, 41 was not choosen
-because of it. But, while investigating this "division optimisation"
-we found it to be a good thing, that enforces our choice of base 41.
+BTW, 1/41 is 0x063e70..., so, since last for bits shown are 0, it has
+a nice property: we can use the first five hex digits (20 bits), but
+actually get the precision of six hex digits (24 bits)! This is much
+better than 1/40 and a little better than 1/42. Also, it's pure
+chance, 41 was not choosen because of it. But, while investigating
+this "division optimisation" we found it to be a good thing, that
+enforces our choice of base 41.
 
 Thus, if you're on 32-bit (or 64-bit) processor, use this loop (unless
 you have a great processor that has a fast HW divider).  For 64 bit
@@ -365,13 +380,13 @@ embedded system, so you're fine with added complexity of an encoding
 
 Well:
 
-- `[48,48]` (ASCII "00") <-> "M60" (interesting if you're for
+- `[48,48]` (ASCII "00") <-> `"M60"` (interesting if you're for
   gun control)
-- `[49,49]` (ASCII "11") <-> "/=0" (proves that Base41 is mathematically
+- `[49,49]` (ASCII "11") <-> `"/=0"` (proves that Base41 is mathematically
   corect, as 11 does not equal 0)
-- `[78,79]` (ASCII "NO") <-> "0,5" (proves that "no" means "maybe")
-- "861" <-> `[172,54]` (Latin1 NOT"6") (more proof of mathematical
+- `[78,79]` (ASCII "NO") <-> `"0,5"` (proves that "no" means "maybe")
+- `"861"` <-> `[172,54]` (Latin1 NOT"6") (more proof of mathematical
   correctness of Base 41, just read it: "861 is not 6")
-- ":-P" is not an allowed Base41 word (would decode to [204,256]),
+- `":-P"` is not an allowed Base41 word (would decode to [204,256]),
   which proves Base41 is polite, as it doesn't allow you to stick
   your tongue out to people

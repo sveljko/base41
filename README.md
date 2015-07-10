@@ -1,6 +1,6 @@
 # base41
 
-https://travis-ci.org/sveljko/base41.svg?branch=master
+[![Build Status](https://travis-ci.org/sveljko/base41.svg?branch=master)](https://travis-ci.org/sveljko/base41)
 
 Base41 encoding can be viewed as a simplified form of Ascii85
 encoding. It is simple to code and understand, safe to embed in

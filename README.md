@@ -9,7 +9,8 @@ minimal resources and is reasonably efficient (has 50% overhead),
 making it a good candidate for use in embedded or otherwise
 constrained systems / applications.
 
-See `base41.md` for a detailed treatment of this encoding.
+See [Base41 Encoding Specification](base41.md) for a detailed
+treatment of this encoding.
 
 This repository has implementations in several languages. All code is
 under the liberal MIT license. Reference implementation is in C. Other

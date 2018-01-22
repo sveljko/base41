@@ -17,8 +17,8 @@ you have to pad).
 We can refer to a four-byte data element and its five-char
 representation as "(Ascii85) words".
 
-The problem of Ascii85 is that it derives it alphabet as a simple
-`ASCII value - 33` formula. So, that means that it uses quotes and
+The problem of Ascii85 is that it derives its alphabet with a simple
+`ASCII value - 33` formula. So, that means it uses quotes and
 backslash, which are, in most text formats, including pretty much all
 the programming languages, used for string representation. Also,
 Ascii85 has a special rule for character `z` - it represents a "zero
@@ -26,13 +26,14 @@ word" (word consisting of four bytes that equal 0). You don't have to
 encode it like that, but you have to decode it (if you encounter
 `z`). So, this is a little special handling that is not nice.
 
-Other encoding with the base of 85 fix that by providing the alphabet
-as a table, which skips quotes and backslash. This is interesting, but
+There are other encodings with the base of 85, such as Z85 (ZeroMQ Base85)
+and RFC 1924, that fix problems of the alphabet by defining it as a table
+which skips quotes and backslash. This is interesting, but
 it requires two tables (one for encoding and the other for decoding).
 On embedded systems, this can be a problem, both in size and in
 processing time.
 
-Also, in embedded systems, sometimes its inconvinient to pad data to
+Also, in embedded systems, sometimes it's inconvinient to pad data to
 have a multiple of 4 elements, especially for shorter data.
 
 ## Base 41
@@ -57,45 +58,45 @@ because you pad with one more byte).
 ...is rather simple, which is not odd, as we designed the encoding with
 that in mind:
 
-	void base41_encode(uint8_t const *input, size_t n, char *output)
-	{
-		uint8_t const *p = input;
-		char *s = output;
+    void base41_encode(uint8_t const *input, size_t n, char *output)
+    {
+        uint8_t const *p = input;
+        char *s = output;
+
+        assert(n % 2 == 0);
+
+        for (p = input; p < input + n; p += 2) {
+            int x = *p + 256 * p[1];
+            *s++ = (x % 41) + 41;
+            x /= 41;
+            *s++ = (x % 41) + 41;
+            *s++ = x/41 + 41;
+        }
+        *s = '\0';
+    }
+
+    void base41_decode(char const *input, uint8_t *output)
+    {
+        char const *s = input;
+        size_t n = strlen(s);
+        uint8_t *p = output;
+        int i;
 		
-		assert(n % 2 == 0);
+        assert(n % 3 == 0);
 
-	    for (p = input; p < input + n; p += 2) {
-			int x = *p + 256 * p[1];
-			*s++ = (x % 41) + 41;
-			x /= 41;
-			*s++ = (x % 41) + 41;
-			*s++ = x/41 + 41;
-		}
-		*s = '\0';
-	}
-
-	void base41_decode(char const *input, uint8_t *output)
-	{
-		char const *s = input;
-		size_t n = strlen(s);
-		uint8_t *p = output;
-		int i;
-		
-		assert(n % 3 == 0);
-
-	    for (i = 0; i < n; i += 3) {
-			int x = (*s - 41) + 41 * (s[1] - 41) + 41*41*(s[2] - 41);
-			*p++ = x % 256;
-			*p++ = x / 256;
-			s += 3;
-		}
-	}
+        for (i = 0; i < n; i += 3) {
+            int x = (*s - 41) + 41 * (s[1] - 41) + 41*41*(s[2] - 41);
+            *p++ = x % 256;
+            *p++ = x / 256;
+            s += 3;
+        }
+    }
 
 This code assumes that user knows how to allocate the needed memory
 for output. For some more defensive/paranoid code, you may want to
 pass the size of the output and check or assert it at the start.
 
-In decoding, the `x / 256` may actually be larger than 256 for badly
+In decoding, the `x / 256` may actually be larger than 255 for badly
 encoded string, but, we don't care, as we assign to an octet, thus the
 "excess" will be thrown out. Paranoid code could check this and report
 an error.
@@ -178,38 +179,42 @@ For those who love tables:
 
 It is good for encoding binary data in JSON (or similar) strings.
 
-On embedded systems, it is pretty fast and uses very little program
-memory and just a little stack and no static or const memory.
+It is pretty fast and uses very little program
+memory and just a little stack and no static or const memory. This
+makes it suitable for embedded systems.
 
 It is easy to implement in any language.
 
 It is easy to just plug into your Javascript code. Javascript
-"modules" are a mess. Javascript doesn't support them and all
-implementations thereof are just a bunch of conventions. It is way
+"modules" are a mess. Javascript doesn't really support them and all
+implementations thereof are just a bunch of conventions. Yes,
+nowadays npm and various tools that "build" your Javascript are
+in wide use, but, it's still a mess, albeit a mess with some vaccum
+cleaners you can use to help you clean it up from time to time. It is way
 easier to just put the code you need on the page itself, but that
-becomes bad when there are lots of such code.  But, Base41 is just a
+goes bad when there's lots of such code.  But, Base41 is just a
 few lines of Javascript. While we're at it:
 
-	function base41_decode(input) {
-	    var rslt = []
-		var n = input.length
-	    for (var i = 0; i < n; i += 3) {
-			var x = (input.charCodeAt(i) - 41) + 41 * (input.charCodeAt(i+1) - 41) + 1681*(input.charCodeAt(i+2) - 41);
-			rslt.push(x % 256, Math.floor(x / 256))
-		}
+    function base41_decode(input) {
+        var rslt = []
+        var n = input.length
+        for (var i = 0; i < n; i += 3) {
+            var x = (input.charCodeAt(i) - 41) + 41 * (input.charCodeAt(i+1) - 41) + 1681*(input.charCodeAt(i+2) - 41);
+            rslt.push(x % 256, Math.floor(x / 256))
+        }
         return rslt
-	}
-	function base41_encode(input) {
-		var rslt = ""
-		var n = input.length
-	    for (var i = 0; i < n; i += 2) {
-			var x = input[i] + 256 * input[i+1];
-			rslt = rslt.concat(String.fromCharCode((x % 41) + 41))
-			x /= 41;
-			rslt = rslt.concat(String.fromCharCode((x % 41) + 41), String.fromCharCode((x / 41) + 41))
-		}
-		return rslt
-	}
+    }
+    function base41_encode(input) {
+        var rslt = ""
+        var n = input.length
+        for (var i = 0; i < n; i += 2) {
+            var x = input[i] + 256 * input[i+1];
+            rslt = rslt.concat(String.fromCharCode((x % 41) + 41));
+            x /= 41;
+            rslt = rslt.concat(String.fromCharCode((x % 41) + 41), String.fromCharCode((x / 41) + 41))
+        }
+        return rslt
+    }
 
 Again, this is the short, "non-paranoid" version. Add checks as per
 your liking.
@@ -219,6 +224,8 @@ your liking.
 Base64 is rather weird:
 
 - There are two Base64 encodings, one for email, other for URLs
+- There are various Base64 variants, differring in alphabet,
+  padding character(s), newline handling...
 - A lot of implementations assume it is text that is encoded/decoded
   and fail if it is not
 - It needs tables for encoding and decoding
@@ -234,7 +241,8 @@ On some processors with the reference implementation, yes. Obviously,
 on such processors, you may be better of with some other encoding, or
 you may try some optimised version.
 
-The simplest encoding is a Base16 variation, which is like Hex
+If speed is that important to you, the simplest encoding you can use 
+is a Base16 variation, which is like Hex
 (Base16), but instead of `0123456789ABCDEF` uses the
 `ABCDEFGHIJKLMNOP` alphabet (ASCCI value - 65).  It has no padding
 issues, so it's as simple as it gets. The only problem is that it has
@@ -257,8 +265,8 @@ since we already omitted `(`. OTOH, since we only use the closing
 parenthesis, we avoid a problem in some interpretation of strings.
 
 There is an interesting idea of having a "Base48". The nice thing
-about it is that division by 48 can be done as by division 16 (a shift
-by 4 bit-wise), followed by division by three, which is a special form
+about it is that division by 48 can be done with division by 16 (a shift
+by 4 bits) followed by division by three, which is a special form
 of division that can be done more efficiently than division by 41,
 which is a large prime number. So, on slow processors, especially
 those that don't have a HW divider, this would likely be faster than
@@ -267,13 +275,13 @@ division by 41.
 But:
 
 - such processors can be better served by Base32 or Base16.
-- actually, the trick for efficient division by 3 is to obuse
-  multiplication, and that can be used for division by 41 too.  So,
+- actually, the trick for efficient division by 3 is to abuse
+  multiplication, and that can be used for division by 41, too.  So,
   unless somebody could employ some non-multiplication trick for
   division by 3, there is no benefit. This is further analyzed below
 - `48 ** 3` is much larger than `2 ** 16`, so there is a sense of
   waste
-- We can't start the alphabet at ASCII 48 as that will "incorporate"
+- We can't start the alphabet at ASCII 48, as that will "incorporate"
   the backslash.  We can start at ASCII 42, which would end at ASCII
   90 which is `Z`, but we do like the idea of "starting at the base".
 
@@ -281,9 +289,9 @@ But:
 
 The trick is to multiply by some number that is the product of `3` and
 some power of two, then shift right by that power. Of course, the best
-such is a representation of `1/3` in fixed-length binary.
+such number is a representation of `1/3` in fixed-length binary.
 
-So, for 32-bit processors (which are common nowadays in embedded world)
+So, for 32-bit processors (which are common nowadays in embedded world),
 this is division by 3:
 
 	(x * 0x5556) >> 16;
@@ -294,35 +302,35 @@ and the remainder is:
 
 Thus the encoding loop of the Base48 would be:
 
-	    for (p = input; p < input + n; p += 2) {
-			int x = *p + 256 * p[1];
-			int q = ((x>>4) * 0x5556) >> 16;
-			*s++ (x - q*48) + 42;
-			x = q;
-			q = ((x>>4) * 0x5556) >> 16;
-			*s++ (x - q*48) + 42;
-			x = q;
-			q = ((x>>4) * 0x5556) >> 16;
-			*s++ q + 42;
-		}
+    for (p = input; p < input + n; p += 2) {
+       int x = *p + 256 * p[1];
+       int q = ((x>>4) * 0x5556) >> 16;
+       *s++ (x - q*48) + 42;
+       x = q;
+       q = ((x>>4) * 0x5556) >> 16;
+       *s++ (x - q*48) + 42;
+       x = q;
+       q = ((x>>4) * 0x5556) >> 16;
+       *s++ q + 42;
+    }
 
 For 16-bit processors, you have to do more tricks, and we don't have a
-solution so don't really know how efficient it would be. But you may
+solution present here. But you may
 try this code on a 16 bit processor, its emulation of 32-bit
 arithmetic may be faster than its 16 bit division.
 
 Obviously, this is not very smart, as division by 48 can be
 expressed as `(x*0x5556) >> 20`, so a smart(er) loop would be:
 
-	    for (p = input; p < input + n; p += 2) {
-			int x = *p + 256 * p[1];
-			int q = (x * 0x5556) >> 20;
-			*s++ (x - q*48) + 42;
-			x = q;
-			q = (x * 0x5556) >> 20;
-			*s++ (x - q*48) + 42;
-			*s++ ((x * 0x5556) >> 20) + 42;
-		}
+    for (p = input; p < input + n; p += 2) {
+        int x = *p + 256 * p[1];
+        int q = (x * 0x5556) >> 20;
+        *s++ (x - q*48) + 42;
+        x = q;
+        q = (x * 0x5556) >> 20;
+        *s++ (x - q*48) + 42;
+        *s++ ((x * 0x5556) >> 20) + 42;
+    }
 
 #### Efficient division by 41
 
@@ -331,32 +339,37 @@ approximation of division by 41 is:
 
 	(x * 0x63e7) >> 20;
 
-the remainder
+and the remainder is:
 
 	x - ((x * 0x63e7) >> 20) * 41);
 
-and the encoding loop:
+and the encoding loop is:
 
-	    for (p = input; p < input + n; p += 2) {
-			int x = *p + 256 * p[1];
-			int q = (x * 0x63e7) >> 20;
-			*s++ = (x - q*41) + 41;
-			x = q;
-			q = (x * 0x63e7) >> 20;
-			*s++ = (x - q*41) + 41;
-			*s++ = ((x * 0x63e7) >> 20) + 41;
-		}
+    for (p = input; p < input + n; p += 2) {
+        int x = *p + 256 * p[1];
+        int q = (x * 0x63e7) >> 20;
+        *s++ = (x - q*41) + 41;
+        x = q;
+        q = (x * 0x63e7) >> 20;
+        *s++ = (x - q*41) + 41;
+        *s++ = ((x * 0x63e7) >> 20) + 41;
+   }
 
 So, actually, it's more efficient than "naive" division by 48 and as
 efficient as "smart" division by 48.
 
-BTW, 1/41 is 0x063e70..., so, since last for bits shown are 0, it has
+BTW, 1/41 is 0x063e70..., so, since last four bits shown are 0, it has
 a nice property: we can use the first five hex digits (20 bits), but
-actually get the precision of six hex digits (24 bits)! This is much
-better than 1/40 and a little better than 1/42. Also, it's pure
-chance, 41 was not choosen because of it. But, while investigating
-this "division optimisation" we found it to be a good thing, that
-enforces our choice of base 41.
+actually get the precision of six hex digits (24 bits)! That is, since
+those last four bits are all 0, they don't influence the precision if
+you're OK with 24 bits precision. This means that it's very hard for
+an error in division to accumulate such as to make our calculations
+incorrect even in the _general_ case, let alone in our usage.
+
+This division error is much better than for 1/40 and a little better than 1/42. 
+Also, it's by pure chance, 41 was not choosen because of it. But, while 
+investigating this "division optimisation" we found it to be a good thing, 
+which enforces our choice of base 41.
 
 Thus, if you're on 32-bit (or 64-bit) processor, use this loop (unless
 you have a great processor that has a fast HW divider).  For 64 bit
@@ -372,9 +385,13 @@ On a more serious note, encoding binary data in XML is not a great
 idea anyway. If you really want to, use Base64, or some "XML friendly"
 Ascii85 dialect.
 
-Also, if you use XML, it is likely you're not on an constrained
+Also, if you use XML, it is likely you're not on a constrained
 embedded system, so you're fine with added complexity of an encoding
 "higher" than Base41.
+
+At long last, put the encoded data in a XML attribute (string), like:
+
+    <some-tag base41="ABC" />
 
 ## Any interesting examples?
 

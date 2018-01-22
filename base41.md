@@ -294,24 +294,24 @@ such number is a representation of `1/3` in fixed-length binary.
 So, for 32-bit processors (which are common nowadays in embedded world),
 this is division by 3:
 
-	(x * 0x5556) >> 16;
+    (x * 0x5556) >> 16;
 
 and the remainder is:
 
-	x - ((x * 0x5556) >> 16) * 3);
+    x - ((x * 0x5556) >> 16) * 3);
 
 Thus the encoding loop of the Base48 would be:
 
     for (p = input; p < input + n; p += 2) {
-       int x = *p + 256 * p[1];
-       int q = ((x>>4) * 0x5556) >> 16;
-       *s++ (x - q*48) + 42;
-       x = q;
-       q = ((x>>4) * 0x5556) >> 16;
-       *s++ (x - q*48) + 42;
-       x = q;
-       q = ((x>>4) * 0x5556) >> 16;
-       *s++ q + 42;
+        int x = *p + 256 * p[1];
+        int q = ((x>>4) * 0x5556) >> 16;
+        *s++ (x - q*48) + 42;
+        x = q;
+        q = ((x>>4) * 0x5556) >> 16;
+        *s++ (x - q*48) + 42;
+        x = q;
+        q = ((x>>4) * 0x5556) >> 16;
+        *s++ q + 42;
     }
 
 For 16-bit processors, you have to do more tricks, and we don't have a
@@ -337,11 +337,11 @@ expressed as `(x*0x5556) >> 20`, so a smart(er) loop would be:
 Actually, the same trick can be applied to 41. That is, a close
 approximation of division by 41 is:
 
-	(x * 0x63e7) >> 20;
+    (x * 0x63e7) >> 20;
 
 and the remainder is:
 
-	x - ((x * 0x63e7) >> 20) * 41);
+    x - ((x * 0x63e7) >> 20) * 41);
 
 and the encoding loop is:
 
@@ -353,7 +353,7 @@ and the encoding loop is:
         q = (x * 0x63e7) >> 20;
         *s++ = (x - q*41) + 41;
         *s++ = ((x * 0x63e7) >> 20) + 41;
-   }
+    }
 
 So, actually, it's more efficient than "naive" division by 48 and as
 efficient as "smart" division by 48.

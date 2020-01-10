@@ -400,7 +400,7 @@ Well:
 - `[48,48]` (ASCII "00") <-> `"M60"` (interesting if you're for
   gun control)
 - `[49,49]` (ASCII "11") <-> `"/=0"` (proves that Base41 is mathematically
-  corect, as 11 does not equal 0)
+  correct, as 11 does not equal 0)
 - `[78,79]` (ASCII "NO") <-> `"0,5"` (proves that "no" means "maybe")
 - `"861"` <-> `[172,54]` (Latin1 NOT"6") (more proof of mathematical
   correctness of Base 41, just read it: "861 is not 6")

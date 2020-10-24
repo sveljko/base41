@@ -16,7 +16,7 @@ def base41_decode(input):
     i = 0
     while i + 2 < len(input):
         x = (ord(input[i]) - 41) + 41 * (ord(input[i+1]) - 41) + 1681*(ord(input[i+2]) - 41)
-        rslt.extend([x % 256, x / 256])
+        rslt.extend([x % 256, x // 256])
         i += 3
     if i != len(input):
         raise TypeError("Invalid Base41 string")
@@ -37,8 +37,8 @@ def base41_encode(input):
     while i + 1 < len(input):
         x = input[i] + 256 * input[i+1]
         rslt += chr((x % 41) + 41)
-        x /= 41
-        rslt += chr((x % 41) + 41) + chr((x / 41) + 41)
+        x //= 41
+        rslt += chr((x % 41) + 41) + chr((x // 41) + 41)
         i += 2
     if i != len(input):
         raise TypeError("Invalid input length for Base41 encoding")

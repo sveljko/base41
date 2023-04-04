@@ -395,15 +395,18 @@ At long last, put the encoded data in a XML attribute (string), like:
 
 ## Any interesting examples?
 
-Well:
+There are a few interesting examples of decoding and encoding.
 
-- `[48,48]` (ASCII "00") <-> `"M60"` (interesting if you're for
-  gun control)
-- `[49,49]` (ASCII "11") <-> `"/=0"` (proves that Base41 is mathematically
-  correct, as 11 does not equal 0)
-- `[78,79]` (ASCII "NO") <-> `"0,5"` (proves that "no" means "maybe")
-- `"861"` <-> `[172,54]` (Latin1 NOT"6") (more proof of mathematical
-  correctness of Base 41, just read it: "861 is not 6")
-- `":-P"` is not an allowed Base41 word (would decode to [204,256]),
-  which proves Base41 is polite, as it doesn't allow you to stick
-  your tongue out to people
+Decoding:
+
+| Binary                 | String  | comment |
+| ---------------------- | ------- | ------- |
+| `[49,49]` (ASCII "11") | `"/=0"` | Base41 is mathematically correct, as 11 does not equal 0|
+| `[78,79]` (ASCII "NO") | `"0,5"` | "no" means "maybe"|
+
+Encoding:
+
+| String                 | Binary  | comment |
+| ---------------------- | ------- | ------- |
+| `"861"` | `[172,54]` Latin1 NOT"6" | more proof of mathematical correctness of Base 41, just read it: "861 is not 6"|
+| `":-P"` | not allowed (would decode to [204,256]) | Base41 is polite, it doesn't allow you to stick your tongue out to people |

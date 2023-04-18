@@ -10,7 +10,7 @@ making it a good candidate for use in embedded or otherwise
 constrained systems / applications.
 
 See [Base41 Encoding Specification](base41.md) for a detailed
-treatment of this encoding.
+treatment of this encoding. Постоји и [Спецификација на српском](base41.sr.md).
 
 This repository has implementations in several languages. All code is
 under the liberal MIT license. Reference implementation is in C. Other
@@ -29,6 +29,6 @@ But, if I did invent it, I hereby put it to public domain as of
 should make any patent claims for it invalid.  Don't laugh, I've seen
 software patents that are much more silly.
 
-### I'm not that old
+### Age before beauty
 
 No, I was not 41 when I invented it. :)

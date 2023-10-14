@@ -25,4 +25,4 @@ jobs:
       run: go build -v ./base41.go
 
     - name: Test
-      run: go test -v ./base41_test.go
+      run: go test -v

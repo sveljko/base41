@@ -244,7 +244,7 @@ you may try some optimised version.
 If speed is that important to you, the simplest encoding you can use 
 is a Base16 variation, which is like Hex
 (Base16), but instead of `0123456789ABCDEF` uses the
-`ABCDEFGHIJKLMNOP` alphabet (ASCCI value - 65).  It has no padding
+`ABCDEFGHIJKLMNOP` alphabet (ASCII value - 65).  It has no padding
 issues, so it's as simple as it gets. The only problem is that it has
 a 100% overhead.
 

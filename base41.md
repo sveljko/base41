@@ -81,7 +81,7 @@ that in mind:
         size_t n = strlen(s);
         uint8_t *p = output;
         int i;
-		
+
         assert(n % 3 == 0);
 
         for (i = 0; i < n; i += 3) {
@@ -172,6 +172,91 @@ For those who love tables:
 	 9    2          19    <          29    F           39    P
 	40    Q
 
+## Bring your own alphabet - Base41 BYOA
+
+In the specification thus far we had a fixed alphabet. There are
+applications wherein this alphabet is not feasible.
+
+A simple variant is to "bring your own alphabet", a list of 41 ASCII
+character codes to be used. Reference code in C99:
+
+    void base41_byoa_encode(uint8_t const *input, size_t n, char *output, char const alphabet[static 41])
+    {
+        uint8_t const *p = input;
+        char *s = output;
+
+        assert(n % 2 == 0);
+
+        for (p = input; p < input + n; p += 2) {
+            int x = *p + 256 * p[1];
+            *s++ = alphabet[x % 41];
+            x /= 41;
+            *s++ = alphabet[x % 41];
+            *s++ = alphabet[x / 41];
+        }
+        *s = '\0';
+    }
+
+    void base41_byoa_decode(char const *input, uint8_t *output, uint8_t const decoder[static 256])
+    {
+        char const *s = input;
+        size_t const n = strlen(s);
+        uint8_t *p = output;
+        int i;
+
+        assert(n % 3 == 0);
+
+        for (i = 0; i < n; i += 3) {
+            int x = (decoder[*s]) + 41 * (decoder[s[1]]) + 41*41*(decoder[s[2]]);
+            *p++ = x % 256;
+            *p++ = x / 256;
+            s += 3;
+        }
+    }
+
+One could be more strict and have the decoder of only 128 elements as
+Base41 uses ASCII characters, but that would imply checking for the
+range of the input character, which complicates reference
+implementation.
+
+Here's a helper function to make the decoder from the alphabet:
+
+    void base41_byoa_make_decoder(char const alphabet[static 41], uint8_t decoder[static 256])
+	{
+	    int i;
+		memset(decoder, 0, 256);
+	    for (i = 0; i < 41; ++i) {
+		    decoder[alphabet[i]] = i;
+		}
+	}
+
+Of course, you can use a different "placeholder" for the characters
+that are not used in the alphabet, say `0xFF`.
+
+The only need for C99 is the `static` specifier which, with a nice
+compiler, will report if you pass an array that is not long enough.
+For C89, just remove the `static` from all of the above.
+
+Here's an example using the alphabet from a paper by Botta and Cavagnino published in
+[2022](https://doi.org/10.1002/eng2.12606), which has a nice property of being
+embeddable in URL or just-about-anything, as it only uses ASCII letters:
+
+     static const char BottaCavagninoAlphabet[41] = "ABCDFGHJKLMNQRSTUVXZabcdefhikmnopqrstuvxz";
+	 static char BottaCavagninoDecoder[256];
+
+	 void test()
+	 {
+         char const encoded[] = "babaQdedaQdecaQ";
+		 uint8_t data[10];
+		 char roundtrip[sizeof encoded / sizeof encoded[0]];
+
+		 base41_byoa_make_decoder(BottaCavagninoAlphabet, BottaCavagninoDecoder);
+
+		 base41_byoa_decode(encoded, data, BottaCavagninoDecoder);
+		 base41_byoa_encode(data, sizeof data / sizeof data[0], roundtrip, BottaCavagninoAlphabet);
+		 assert(0 == memcmp(encoded, roundtrip, sizeof encoded));
+	 }
+
 
 ## Discussion
 
@@ -241,7 +326,7 @@ On some processors with the reference implementation, yes. Obviously,
 on such processors, you may be better of with some other encoding, or
 you may try some optimised version.
 
-If speed is that important to you, the simplest encoding you can use 
+If speed is that important to you, the simplest encoding you can use
 is a Base16 variation, which is like Hex
 (Base16), but instead of `0123456789ABCDEF` uses the
 `ABCDEFGHIJKLMNOP` alphabet (ASCII value - 65).  It has no padding
@@ -366,9 +451,9 @@ you're OK with 24 bits precision. This means that it's very hard for
 an error in division to accumulate such as to make our calculations
 incorrect even in the _general_ case, let alone in our usage.
 
-This division error is much better than for 1/40 and a little better than 1/42. 
-Also, it's by pure chance, 41 was not choosen because of it. But, while 
-investigating this "division optimisation" we found it to be a good thing, 
+This division error is much better than for 1/40 and a little better than 1/42.
+Also, it's by pure chance, 41 was not choosen because of it. But, while
+investigating this "division optimisation" we found it to be a good thing,
 which enforces our choice of base 41.
 
 Thus, if you're on 32-bit (or 64-bit) processor, use this loop (unless
@@ -389,9 +474,13 @@ Also, if you use XML, it is likely you're not on a constrained
 embedded system, so you're fine with added complexity of an encoding
 "higher" than Base41.
 
-At long last, put the encoded data in a XML attribute (string), like:
+If your application can handle it, put the encoded data in a XML
+attribute (string), like:
 
     <some-tag base41="ABC" />
+
+At long last, one can construct an almost infinite amount of BYOA
+variants that work well with XML.
 
 ## Any interesting examples?
 

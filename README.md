@@ -12,7 +12,58 @@ treatment of this encoding. Постоји и [Спецификација на �
 
 This repository has implementations in several languages. All code is
 under the liberal MIT license. Reference implementation is in C. Other
-languages may follow.
+language implementations are references for their perspective languages.
+
+## Bring Your Own Alphabet variant
+
+To reduce code size and potential configuration issues (i.e. encoder
+using a different alphabet than the decoder) _and_ increase
+performance, the Base41 Specification fixes a particular Alphabet.
+
+Of course, that Alphabet is not good for all purposes. So, a variant
+of Base41 is to "bring your own Alphabet" (BYOA) of 41 ASCII
+characters. In the following sections there are some examples thereof.
+
+### Paper on a similar encoding with the same name
+
+Botta and Cavagnino published a paper in
+[2022](https://doi.org/10.1002/eng2.12606) which uses the BYOA
+variant, with Alphabet selected so that Base41 encoded string can be
+part of an URL. This was the first inspiration for having a BYOA
+variant of Base41 spec.
+
+They also define the encoding to not be "byte oriented" but
+"bit-oriented".  That is, data need not have `8 x N`
+bits. Interesting, but complicates things for a somewhat rare use-case
+(well, I guess for them it was not so rare).
+
+They were kind enough to mention this code repo as "apriori art" of sorts.
+It's an interesting read, with a different focus and presentation style
+than our specification. Here's the full reference to the paper:
+
+> Botta, Marco, and Davide Cavagnino. "Base41: A proposal for printable encoding of bit strings."
+> Engineering Reports (2022): e12606.
+
+### BYOA for QR Codes
+
+Philippe Majerus (github user `PhMajerus`) proposes an Alphabet with
+characters used in alphanumeric QR Codes _and_ which can be part of an
+URL. To be precise:
+
+    0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$*-.:
+
+Thus one can encode an URL with some binary data in an alphanumeric QR
+code. Caveats:
+
+* Dollar (`$`) and asterisk (`*`) are URL sub-delimiters, thus
+  reserved mostly because of file naming conventions, but should be OK
+  for most servers which are aware that URL paths are not the same as
+  file system paths.
+* Colon (`:`) is a delimiter, _could_ interfere with the server's path
+  processing, so some care should be taken.
+
+One of the above can be replaced with `+` if that helps HTTP server's
+URL processing.
 
 
 ## Misc
@@ -27,27 +78,8 @@ But, if I did invent it, I hereby put it to public domain as of
 should make any patent claims for it invalid.  Don't laugh, I've seen
 software patents that are much more silly.
 
-### Paper on a similar encoding with the same name
+I did not invent any of the BYOA Alphabets mentioned above.
 
-Botta and Cavagnino published a paper in [2022](https://doi.org/10.1002/eng2.12606) 
-about a slightly different encoding with the same name. The differences are:
-
-1. They have a "hand-picked" alphabet, making it possible for the Base41
-   encoded string to be part of an URL. Interesting, but, we avoided having
-   an "alphabet table" by design, to reduce memory footprint.
-2. Their encoding is not "byte oriented" but "bit-oriented". That is, data
-   need not have `8 x N` bits. Again, interesting, but complicates things for 
-   a somewhat rare use-case (well, I guess for them it was not so rare).
-
-Thus, we can think of that as a variant/dialect of the same encoding, which
-one would use if the differences mentioned above favour it in some application.
-
-They were kind enough to mention this code repo as "apriori art" of sorts.
-It's an interesting read, with a different focus and presentation style
-than our specification. Here's the full reference to the paper:
-
-> Botta, Marco, and Davide Cavagnino. "Base41: A proposal for printable encoding of bit strings." 
-> Engineering Reports (2022): e12606.   
 
 ### Age before beauty
 

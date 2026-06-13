@@ -65,6 +65,25 @@ code. Caveats:
 One of the above can be replaced with `+` if that helps HTTP server's
 URL processing.
 
+### IETF RFC 9285 Base45
+
+While using the same "3 for 2" encoding scheme, they chose Base 45 
+instead of 41, with the idea of using all of the characters from the 
+QR code alphabet. The spec is somewhat lacking, as there is no description
+what to do with improper coding, which is much more likely in their case
+(2**45 is 91125, much higher than 65535, making the chance of improper
+encoding more than 28%), though they do mandate that the odd number of 
+bytes be appended with `0` before encoding.
+
+The thing is, there's no advantage in using Base45 over Majerus'
+BYOA for Base41. Actually, the opposite is true, in addition to
+the binary URL use, the 4 unused characters could be used for error 
+checking and other purposes. For example, CRC-16 would take a string 
+of two of these 4 unused characters and CRC-64 would take three.
+
+They do not mention Base41.
+
+
 
 ## Misc
 
